@@ -143,23 +143,6 @@
   .scenario-btn .sc-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
   .scenario-btn.active .sc-sub { color: var(--green-mid); }
 
-  /* CALCULATE BTN */
-  .calc-btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--green-mid);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 4px;
-    letter-spacing: 0.02em;
-    transition: background 0.2s;
-  }
-  .calc-btn:hover { background: var(--green-dark); }
-  .calc-btn:active { transform: scale(0.99); }
 
   /* RESULTS */
   #results { display: none; }
@@ -285,21 +268,21 @@
     <div class="card-body">
       <div class="form-row">
         <label id="l-state">STATE / राज्य</label>
-        <select id="stateSelect" onchange="populateCrops()">
+        <select id="stateSelect" onchange="populateCrops(); autoRecalc()">
           <option value="" id="ph-state">-- Select State --</option>
         </select>
       </div>
       <div class="form-row">
         <label id="l-crop">CROP / फसल</label>
-        <select id="cropSelect" disabled>
+        <select id="cropSelect" disabled onchange="autoRecalc()">
           <option value="" id="ph-crop">-- Select Crop --</option>
         </select>
       </div>
       <div class="form-row">
         <label id="l-land">LAND AREA / भूमि क्षेत्रफल</label>
         <div class="land-row">
-          <input type="number" id="landInput" min="0.01" step="0.01" placeholder="e.g. 1.5" />
-          <select id="unitSelect">
+          <input type="number" id="landInput" min="0.01" step="0.01" placeholder="e.g. 1.5" oninput="autoRecalc()" />
+          <select id="unitSelect" onchange="autoRecalc()">
             <option value="ha">Hectare</option>
             <option value="acre">Acre</option>
             <option value="bigha_up">Bigha (UP)</option>
@@ -321,9 +304,6 @@
           </div>
         </div>
       </div>
-      <button class="calc-btn" id="calcBtn" onclick="calculate()">
-        <span id="btn-text">🧮 Calculate Fertilizer</span>
-      </button>
     </div>
   </div>
 
@@ -677,6 +657,7 @@ function selectScenario(s) {
   scenario = s;
   document.getElementById('sc1btn').classList.toggle('active', s === 1);
   document.getElementById('sc2btn').classList.toggle('active', s === 2);
+  autoRecalc();
 }
 
 // =====================
@@ -684,11 +665,11 @@ function selectScenario(s) {
 // =====================
 function bagsToWords(bags, isHindi) {
   if (bags === 0) return isHindi ? T.hi.noMop : T.en.noMop;
-  const whole = Math.floor(bags);
+  let whole = Math.floor(bags);
   const frac = bags - whole;
   
   let fracStr = '';
-  if (frac >= 0.875) { fracStr = isHindi ? 'एक पूरा बैग अतिरिक्त' : ''; whole++; } // round up
+  if (frac >= 0.875) { whole++; fracStr = ''; } // round up to next full bag
   else if (frac >= 0.625) fracStr = isHindi ? 'तीन चौथाई' : 'three quarter';
   else if (frac >= 0.375) fracStr = isHindi ? 'आधा' : 'half';
   else if (frac >= 0.125) fracStr = isHindi ? 'एक चौथाई' : 'one quarter';
@@ -705,6 +686,13 @@ function bagsToWords(bags, isHindi) {
   }
 }
 
+// Auto-recalculate when inputs change (only if results already shown)
+function autoRecalc() {
+  if (document.getElementById('results').style.display !== 'none') {
+    calculate();
+  }
+}
+
 function calculate() {
   const t = T[lang];
   const state = document.getElementById('stateSelect').value;
@@ -712,9 +700,9 @@ function calculate() {
   const landVal = parseFloat(document.getElementById('landInput').value);
   const unit = document.getElementById('unitSelect').value;
 
-  if (!state) { alert(t.errState); shake('stateSelect'); return; }
-  if (!crop) { alert(t.errCrop); shake('cropSelect'); return; }
-  if (!landVal || landVal <= 0) { alert(t.errLand); shake('landInput'); return; }
+  if (!state) { shake('stateSelect'); return; }
+  if (!crop) { shake('cropSelect'); return; }
+  if (!landVal || landVal <= 0) { shake('landInput'); return; }
 
   // Convert land to hectares
   const landHa = landVal * unitToHa[unit];
@@ -811,8 +799,8 @@ function calculate() {
   });
   document.getElementById('resultBody').innerHTML = rows;
 
-  // Note
-  document.getElementById('noteBox').innerHTML = `<strong>${t.noteLabel}</strong> ${t.calcNote}`;
+  // Note hidden as per user preference
+  document.getElementById('noteBox').innerHTML = '';
 
   // GFR Info
   const scenName = scenario === 1
@@ -857,7 +845,7 @@ function applyLang() {
   document.getElementById('l-scenario').textContent = t.lScenario;
   document.getElementById('sc1-sub').textContent = t.sc1Sub;
   document.getElementById('sc2-sub').textContent = t.sc2Sub;
-  document.getElementById('btn-text').textContent = t.btnText;
+
   document.getElementById('footer-text').textContent = t.footer;
 
   // Update unit options

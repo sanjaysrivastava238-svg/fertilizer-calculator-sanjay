@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2D6A4F">
+<meta name="description" content="Fertilizer Calculator / उर्वरक कैलकुलेटर">
+<link rel="manifest" href="manifest.json">
+<title>Fertilizer Calculator | उर्वरक कैलकुलेटर</title>
+<style>
+  :root {
+    --green-dark: #1B4332;
+    --green-mid: #2D6A4F;
+    --green-light: #40916C;
+    --green-pale: #D8F3DC;
+    --amber: #E9A000;
+    --amber-light: #FFF3CD;
+    --soil: #8B5E3C;
+    --cream: #FAFAF7;
+    --text: #1A1A1A;
+    --text-muted: #5C5C5C;
+    --border: #D0D8C8;
+    --white: #ffffff;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(27,67,50,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
+    color: var(--white);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.25);
+  }
+  .header-inner {
+    max-width: 720px;
+    margin: auto;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header-titles { flex:1; }
+  .header-titles h1 { font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+  .header-titles p { font-size: 0.85rem; opacity: 0.82; margin-top: 2px; }
+  .lang-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: white;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .lang-toggle:hover { background: rgba(255,255,255,0.25); }
+
+  /* MAIN */
+  main { max-width: 720px; margin: auto; padding: 20px 16px 40px; }
+
+  /* CARD */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--green-pale);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-header .icon { font-size: 1.2rem; }
+  .card-header h2 { font-size: 0.95rem; font-weight: 700; color: var(--green-dark); }
+  .card-header .sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 1px; }
+  .card-body { padding: 18px; }
+
+  /* FORM */
+  .form-row { margin-bottom: 16px; }
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    letter-spacing: 0.03em;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--white);
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.2s;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232D6A4F' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  select:focus, input:focus { outline: none; border-color: var(--green-light); }
+
+  .land-row {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 10px;
+    align-items: end;
+  }
+  .land-row select { width: 100%; }
+
+  /* SCENARIO TOGGLE */
+  .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .scenario-btn {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    background: var(--white);
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .scenario-btn.active { border-color: var(--green-light); background: var(--green-pale); }
+  .scenario-btn .sc-title { font-weight: 700; font-size: 0.88rem; color: var(--green-dark); }
+  .scenario-btn .sc-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+  .scenario-btn.active .sc-sub { color: var(--green-mid); }
+
+  /* CALCULATE BTN */
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--green-mid);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+    transition: background 0.2s;
+  }
+  .calc-btn:hover { background: var(--green-dark); }
+  .calc-btn:active { transform: scale(0.99); }
+
+  /* RESULTS */
+  #results { display: none; }
+  .result-header {
+    background: var(--green-dark);
+    color: white;
+    padding: 14px 18px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .result-header h3 { font-size: 1rem; font-weight: 700; }
+  .result-header .result-meta { font-size: 0.8rem; opacity: 0.8; margin-top: 3px; }
+
+  .result-summary {
+    padding: 16px 18px;
+    background: var(--green-pale);
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .summary-chip {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .summary-chip strong { color: var(--green-dark); }
+
+  .fert-table-wrap { padding: 18px; overflow-x: auto; }
+  .fert-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .fert-table thead th {
+    background: var(--green-dark);
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .fert-table thead th:first-child { border-radius: 6px 0 0 0; }
+  .fert-table thead th:last-child { border-radius: 0 6px 0 0; }
+  .fert-table tbody tr:nth-child(even) { background: #F5F8F5; }
+  .fert-table tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .fert-table tbody td:first-child { font-weight: 600; color: var(--green-dark); }
+  .fert-table .bags-num { font-weight: 700; font-size: 1.05rem; color: var(--green-mid); }
+  .fert-table .bags-word { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+  .fert-table .kg-val { font-size: 0.88rem; }
+
+  .note-box {
+    margin: 0 18px 18px;
+    padding: 12px 14px;
+    background: var(--amber-light);
+    border-left: 4px solid var(--amber);
+    border-radius: 0 6px 6px 0;
+    font-size: 0.82rem;
+    color: #6B4A00;
+    line-height: 1.5;
+  }
+
+  /* GFR INFO */
+  .gfr-info {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: #F9FAF8;
+  }
+  .gfr-info .gfr-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .gfr-info .gfr-row:last-child { margin-bottom: 0; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    background: var(--white);
+    margin-top: 20px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 440px) {
+    .header-titles h1 { font-size: 1rem; }
+    .land-row { grid-template-columns: 1fr; }
+    .scenario-grid { grid-template-columns: 1fr; }
+  }
+
+  .shake { animation: shake 0.3s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-titles">
+      <h1 id="h-title">🌾 Fertilizer Calculator</h1>
+      <p id="h-sub">State-wise General Fertilizer Recommendations</p>
+    </div>
+    <button class="lang-toggle" id="langBtn" onclick="toggleLang()">हिंदी</button>
+  </div>
+</header>
+
+<main>
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-header">
+      <span class="icon">📋</span>
+      <div>
+        <h2 id="f-title">Enter Farm Details</h2>
+        <div class="sub" id="f-sub">Select state, crop and enter your land area</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <label id="l-state">STATE / राज्य</label>
+        <select id="stateSelect" onchange="populateCrops()">
+          <option value="" id="ph-state">-- Select State --</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label id="l-crop">CROP / फसल</label>
+        <select id="cropSelect" disabled>
+          <option value="" id="ph-crop">-- Select Crop --</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label id="l-land">LAND AREA / भूमि क्षेत्रफल</label>
+        <div class="land-row">
+          <input type="number" id="landInput" min="0.01" step="0.01" placeholder="e.g. 1.5" />
+          <select id="unitSelect">
+            <option value="ha">Hectare</option>
+            <option value="acre">Acre</option>
+            <option value="bigha_up">Bigha (UP)</option>
+            <option value="bigha_mp">Bigha (MP/Raj)</option>
+            <option value="guntha">Guntha/Cent</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label id="l-scenario">FERTILIZER SCENARIO / उर्वरक परिदृश्य</label>
+        <div class="scenario-grid">
+          <div class="scenario-btn active" id="sc1btn" onclick="selectScenario(1)">
+            <div class="sc-title">Scenario 1</div>
+            <div class="sc-sub" id="sc1-sub">Urea + DAP + MOP</div>
+          </div>
+          <div class="scenario-btn" id="sc2btn" onclick="selectScenario(2)">
+            <div class="sc-title">Scenario 2</div>
+            <div class="sc-sub" id="sc2-sub">Urea + SSP + MOP</div>
+          </div>
+        </div>
+      </div>
+      <button class="calc-btn" id="calcBtn" onclick="calculate()">
+        <span id="btn-text">🧮 Calculate Fertilizer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card" id="results">
+    <div class="result-header">
+      <h3 id="res-title">📊 Fertilizer Requirement</h3>
+      <div class="result-meta" id="res-meta"></div>
+    </div>
+    <div class="result-summary">
+      <div class="summary-items" id="summaryItems"></div>
+    </div>
+    <div class="fert-table-wrap">
+      <table class="fert-table">
+        <thead>
+          <tr>
+            <th id="th-fert">FERTILIZER</th>
+            <th id="th-kg">KG REQUIRED</th>
+            <th id="th-bags">NO. OF BAGS (50 kg)</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+    <div class="note-box" id="noteBox"></div>
+    <div class="gfr-info" id="gfrInfo"></div>
+  </div>
+</main>
+
+<footer id="footer-text">
+  Data source: District-wise GFR for Major Crops in India · Bag size: 50 kg · 1 bag = 50 kg
+</footer>
+
+<script>
+// =====================
+// TRANSLATION STRINGS
+// =====================
+const T = {
+  en: {
+    hTitle: '🌾 Fertilizer Calculator',
+    hSub: 'State-wise General Fertilizer Recommendations',
+    langBtn: 'हिंदी',
+    fTitle: 'Enter Farm Details',
+    fSub: 'Select state, crop and enter your land area',
+    lState: 'STATE / राज्य',
+    lCrop: 'CROP / फसल',
+    lLand: 'LAND AREA / भूमि क्षेत्रफल',
+    lScenario: 'FERTILIZER SCENARIO / उर्वरक परिदृश्य',
+    phState: '-- Select State --',
+    phCrop: '-- Select Crop --',
+    sc1Sub: 'Urea + DAP + MOP',
+    sc2Sub: 'Urea + SSP + MOP',
+    btnText: '🧮 Calculate Fertilizer',
+    resTitle: '📊 Fertilizer Requirement',
+    thFert: 'FERTILIZER',
+    thKg: 'KG REQUIRED',
+    thBags: 'NO. OF BAGS (Urea:45kg / Others:50kg)',
+    noteLabel: '⚠️ Note:',
+    gfrN: 'N (kg/ha)',
+    gfrP: 'P₂O₅ (kg/ha)',
+    gfrK: 'K₂O (kg/ha)',
+    noMop: 'No MOP required',
+    footer: 'Data source: District-wise GFR for Major Crops in India · Urea bag: 45 kg · DAP/MOP/SSP bag: 50 kg',
+    errState: 'Please select a state.',
+    errCrop: 'Please select a crop.',
+    errLand: 'Please enter a valid land area.',
+    calcNote: 'Recommended quantities based on GFR. Urea bag = 45 kg; DAP/MOP/SSP bag = 50 kg. In Scenario 1, N supplied by DAP (18%) is deducted before computing Urea. Actual doses may vary based on soil test.',
+    unitNames: { ha: 'Hectare', acre: 'Acre', bigha_up: 'Bigha (UP)', bigha_mp: 'Bigha (MP/Raj)', guntha: 'Guntha/Cent' }
+  },
+  hi: {
+    hTitle: '🌾 उर्वरक कैलकुलेटर',
+    hSub: 'राज्यवार सामान्य उर्वरक अनुशंसाएं',
+    langBtn: 'English',
+    fTitle: 'खेत की जानकारी दर्ज करें',
+    fSub: 'राज्य, फसल चुनें और भूमि क्षेत्रफल दर्ज करें',
+    lState: 'राज्य / STATE',
+    lCrop: 'फसल / CROP',
+    lLand: 'भूमि क्षेत्रफल / LAND AREA',
+    lScenario: 'उर्वरक परिदृश्य / FERTILIZER SCENARIO',
+    phState: '-- राज्य चुनें --',
+    phCrop: '-- फसल चुनें --',
+    sc1Sub: 'यूरिया + डीएपी + एमओपी',
+    sc2Sub: 'यूरिया + एसएसपी + एमओपी',
+    btnText: '🧮 उर्वरक की गणना करें',
+    resTitle: '📊 उर्वरक आवश्यकता',
+    thFert: 'उर्वरक',
+    thKg: 'आवश्यक किग्रा',
+    thBags: 'बैग की संख्या (यूरिया:45किग्रा / अन्य:50किग्रा)',
+    noteLabel: '⚠️ नोट:',
+    gfrN: 'नाइट्रोजन (किग्रा/हे)',
+    gfrP: 'फॉस्फोरस (किग्रा/हे)',
+    gfrK: 'पोटाश (किग्रा/हे)',
+    noMop: 'एमओपी की आवश्यकता नहीं',
+    footer: 'स्रोत: भारत में प्रमुख फसलों के लिए सामान्य उर्वरक अनुशंसाएं · यूरिया बैग: 45 किग्रा · डीएपी/एमओपी/एसएसपी बैग: 50 किग्रा',
+    errState: 'कृपया एक राज्य चुनें।',
+    errCrop: 'कृपया एक फसल चुनें।',
+    errLand: 'कृपया एक वैध भूमि क्षेत्र दर्ज करें।',
+    calcNote: 'ये जीएफआर पर आधारित अनुशंसित मात्राएं हैं। यूरिया बैग = 45 किग्रा; डीएपी/एमओपी/एसएसपी बैग = 50 किग्रा। परिदृश्य 1 में, डीएपी द्वारा आपूर्ति की गई नाइट्रोजन (18%) को यूरिया की गणना से पहले घटाया जाता है। मिट्टी परीक्षण के आधार पर वास्तविक खुराक भिन्न हो सकती है।',
+    unitNames: { ha: 'हेक्टेयर', acre: 'एकड़', bigha_up: 'बीघा (UP)', bigha_mp: 'बीघा (MP/राज)', guntha: 'गुंठा/सेंट' }
+  }
+};
+
+let lang = 'en';
+let scenario = 1;
+
+// Unit conversions to hectare
+const unitToHa = {
+  ha: 1,
+  acre: 0.404686,
+  bigha_up: 0.198929, // 1 Bigha (UP) = 0.198929 ha
+  bigha_mp: 0.253777, // 1 Bigha (MP/Rajasthan) = 0.253777 ha
+  guntha: 0.010117   // 1 Guntha/Cent = 0.010117 ha
+};
+
+// =====================
+// GFR DATA
+// =====================
+// Each entry: [state, crop, N, P2O5, K2O, urea_per_ha, dap_per_ha, mop_per_ha, ssp_per_ha]
+// Urea: N*100/46, DAP: P*100/46, MOP: K*100/60, SSP: P*100/16
+// Formulas: Urea(kg/ha) = N/0.46, DAP(kg/ha) = P/0.46, MOP(kg/ha) = K/0.60, SSP(kg/ha) = P/0.16
+
+const GFR = [
+  ["Andhra Pradesh","Rice",75.8,48.5,27.7],
+  ["Andhra Pradesh","Kharif Maize",129.6,44,42.5],
+  ["Andhra Pradesh","Rabi Maize",205.8,61.7,62.3],
+  ["Andhra Pradesh","Cotton (American Varieties)",90,45,45],
+  ["Andhra Pradesh","Cotton (Hybrids)",120,60,60],
+  ["Andhra Pradesh","Sorghum (Irrigated)",100,60,40],
+  ["Andhra Pradesh","Sorghum (Rainfed)",80,40,30],
+  ["Assam","Rice",51.7,30,21.2],
+  ["Assam","Kharif Maize",80.2,35.9,40],
+  ["Assam","Rabi Maize",78.9,35.3,38.6],
+  ["Bihar","Rice",84.2,36.4,22],
+  ["Bihar","Wheat",98.8,33.6,29.6],
+  ["Bihar","Sugarcane",131.8,60.3,53.2],
+  ["Bihar","Rabi Maize",138,58.2,50.9],
+  ["Bihar","Potato",150,90,100],
+  ["Chhattisgarh","Rice",70,35,22.7],
+  ["Chhattisgarh","Wheat",70.9,28.9,27.1],
+  ["Chhattisgarh","Kharif Maize",74.7,32.1,37.1],
+  ["Gujarat","Rice",54.2,30,20.9],
+  ["Gujarat","Wheat",52.7,30,24.8],
+  ["Gujarat","Sugarcane",173.5,55.5,58.8],
+  ["Gujarat","Kharif Maize",60,30,20],
+  ["Gujarat","Rabi Maize",70,30,21.7],
+  ["Gujarat","Cotton (South Gujarat)",240,60,60],
+  ["Gujarat","Pearl Millet (North Gujarat)",80,40,0],
+  ["Gujarat","Finger Millet",40,20,20],
+  ["Haryana","Rice",84.2,33.8,20],
+  ["Haryana","Wheat",119.5,41.8,20],
+  ["Haryana","Cotton",175,60,60],
+  ["Haryana","Potato",135,50,100],
+  ["Haryana","Pearl Millet",156.25,62.5,0],
+  ["Haryana","Sorghum",75,30,30],
+  ["Himachal Pradesh","Rice",111.7,36.7,20],
+  ["Himachal Pradesh","Wheat",60.8,36.7,20],
+  ["Jammu & Kashmir","Rice",60,30,20],
+  ["Jammu & Kashmir","Wheat",63.5,47,20],
+  ["Jharkhand","Rice",60,30.8,31.5],
+  ["Jharkhand","Wheat",61.2,30.6,20],
+  ["Karnataka","Rice",61.6,31.1,37.9],
+  ["Karnataka","Sugarcane",257.9,67.7,101.8],
+  ["Karnataka","Kharif Maize",122.3,50,60],
+  ["Karnataka","Rabi Maize",120.8,50,50],
+  ["Karnataka","Cotton (Irrigated)",150,75,75],
+  ["Karnataka","Potato (Irrigated)",125,100,125],
+  ["Karnataka","Potato (Dryland/Rainfed)",75,75,100],
+  ["Karnataka","Pearl Millet (Irrigated)",100,62.5,25],
+  ["Karnataka","Pearl Millet (Dryland/Rainfed)",50,25,0],
+  ["Karnataka","Sorghum (Irrigated)",100,75,40],
+  ["Karnataka","Sorghum (Dryland/Rainfed)",65,40,40],
+  ["Karnataka","Finger Millet (Irrigated)",100,50,50],
+  ["Karnataka","Finger Millet (Dryland/Rainfed)",50,40,37.5],
+  ["Kerala","Rice",58.8,30,24.2],
+  ["Madhya Pradesh","Rice",61.7,39.5,21.6],
+  ["Madhya Pradesh","Wheat",77.9,34.2,31.3],
+  ["Madhya Pradesh","Cotton (Irrigated)",160,80,40],
+  ["Madhya Pradesh","Cotton (Dryland/Rainfed)",80,40,40],
+  ["Madhya Pradesh","Potato (Irrigated)",120,100,100],
+  ["Madhya Pradesh","Sorghum (Normal Varieties)",120,60,50],
+  ["Madhya Pradesh","Sorghum (Local Varieties)",60,40,30],
+  ["Madhya Pradesh","Finger Millet (Irrigated)",60,40,30],
+  ["Maharashtra","Rice",73.5,36.3,44.6],
+  ["Maharashtra","Wheat",52,30.3,21],
+  ["Maharashtra","Sugarcane",162,82.3,72],
+  ["Maharashtra","Kharif Maize",82.7,42,35.5],
+  ["Maharashtra","Rabi Maize",104.3,45,38.6],
+  ["Maharashtra","Cotton (Vidarbha)",40,60,60],
+  ["Maharashtra","Cotton (Marathwada - Irrigated)",150,75,75],
+  ["Maharashtra","Cotton (Marathwada - Dryland/Rainfed)",120,60,60],
+  ["Maharashtra","Pearl Millet (Vidarbha)",60,30,30],
+  ["Maharashtra","Sorghum (Vidarbha)",80,40,40],
+  ["Odisha","Rice",55.3,32.3,20],
+  ["Odisha","Potato",125,60,125],
+  ["Punjab","Rice",110.9,30,30],
+  ["Punjab","Wheat",78.4,36.8,35],
+  ["Punjab","Sugarcane",177.4,32.6,40],
+  ["Punjab","Kharif Maize",106.3,50,47.6],
+  ["Punjab","Potato",190,60,60],
+  ["Rajasthan","Rice",50.9,30,21.1],
+  ["Rajasthan","Wheat",87.3,33,23.7],
+  ["Rajasthan","Cotton",75,35,0],
+  ["Rajasthan","Potato",75,25,25],
+  ["Rajasthan","Pearl Millet",90,30,0],
+  ["Rajasthan","Sorghum",80,40,0],
+  ["Tamil Nadu","Kharif Rice",104.9,32.6,34.9],
+  ["Tamil Nadu","Rice-Rabi",103.8,31.5,33.8],
+  ["Tamil Nadu","Sugarcane",262,64.6,82.2],
+  ["Tamil Nadu","Kharif Maize",155.8,72.4,70],
+  ["Tamil Nadu","Rabi Maize",122,60,52.3],
+  ["Tamil Nadu","Cotton (Irrigated)",80,40,40],
+  ["Tamil Nadu","Cotton (Dryland/Rainfed)",40,20,40],
+  ["Tamil Nadu","Potato (Irrigated)",120,240,120],
+  ["Tamil Nadu","Pearl Millet (Normal Varieties)",70,35,35],
+  ["Tamil Nadu","Pearl Millet (Hybrid)",80,40,40],
+  ["Tamil Nadu","Sorghum",90,45,45],
+  ["Tamil Nadu","Finger Millet (Irrigated)",60,30,30],
+  ["Tamil Nadu","Finger Millet (Dryland/Rainfed)",40,20,20],
+  ["Telangana","Rice",86.2,49.7,27.7],
+  ["Telangana","Kharif Maize",115.8,50.3,46.7],
+  ["Telangana","Rabi Maize",193.4,65,58.3],
+  ["Telangana","Cotton",150,60,60],
+  ["Telangana","Pearl Millet",90,40,40],
+  ["Telangana","Sorghum",80,60,40],
+  ["Telangana","Finger Millet",42.5,35,22.5],
+  ["Uttar Pradesh","Rice",94.3,40.8,36.7],
+  ["Uttar Pradesh","Wheat",95.6,39.1,27.7],
+  ["Uttar Pradesh","Sugarcane",219.7,55,62.3],
+  ["Uttar Pradesh","Kharif Maize",79.8,45.1,40.1],
+  ["Uttar Pradesh","Rabi Maize",99.5,45.3,46.9],
+  ["Uttar Pradesh","Potato",180,80,100],
+  ["Uttar Pradesh","Pearl Millet",80,40,40],
+  ["Uttar Pradesh","Sorghum",80,40,20],
+  ["Uttarakhand","Rice",64.6,30,20],
+  ["Uttarakhand","Wheat",80.4,36.5,20],
+  ["West Bengal","Rice",69.1,40,34.1],
+  ["West Bengal","Wheat",67.7,38,33.6],
+  ["West Bengal","Rabi Maize",122,58.2,48.4],
+  ["West Bengal","Cotton",80,40,30],
+  ["West Bengal","Potato",210,75,105],
+];
+
+// =====================
+// HINDI CROP NAMES
+// =====================
+const cropHindi = {
+  "Rice": "धान",
+  "Kharif Maize": "खरीफ मक्का",
+  "Rabi Maize": "रबी मक्का",
+  "Cotton (American Varieties)": "कपास (अमेरिकन किस्म)",
+  "Cotton (Hybrids)": "कपास (हाइब्रिड)",
+  "Sorghum (Irrigated)": "ज्वार (सिंचित)",
+  "Sorghum (Rainfed)": "ज्वार (वर्षा आधारित)",
+  "Wheat": "गेहूं",
+  "Sugarcane": "गन्ना",
+  "Potato": "आलू",
+  "Cotton (South Gujarat)": "कपास (दक्षिण गुजरात)",
+  "Pearl Millet (North Gujarat)": "बाजरा (उत्तर गुजरात)",
+  "Finger Millet": "रागी/मड़ुआ",
+  "Cotton": "कपास",
+  "Pearl Millet": "बाजरा",
+  "Sorghum": "ज्वार",
+  "Cotton (Irrigated)": "कपास (सिंचित)",
+  "Potato (Irrigated)": "आलू (सिंचित)",
+  "Potato (Dryland/Rainfed)": "आलू (वर्षा आधारित)",
+  "Pearl Millet (Irrigated)": "बाजरा (सिंचित)",
+  "Pearl Millet (Dryland/Rainfed)": "बाजरा (वर्षा आधारित)",
+  "Sorghum (Dryland/Rainfed)": "ज्वार (वर्षा आधारित)",
+  "Finger Millet (Irrigated)": "रागी (सिंचित)",
+  "Finger Millet (Dryland/Rainfed)": "रागी (वर्षा आधारित)",
+  "Cotton (Vidarbha)": "कपास (विदर्भ)",
+  "Cotton (Marathwada - Irrigated)": "कपास (मराठवाड़ा - सिंचित)",
+  "Cotton (Marathwada - Dryland/Rainfed)": "कपास (मराठवाड़ा - वर्षा आधारित)",
+  "Pearl Millet (Vidarbha)": "बाजरा (विदर्भ)",
+  "Sorghum (Vidarbha)": "ज्वार (विदर्भ)",
+  "Kharif Rice": "खरीफ धान",
+  "Rice-Rabi": "धान (रबी)",
+  "Cotton (Dryland/Rainfed)": "कपास (वर्षा आधारित)",
+  "Potato (Irrigated)": "आलू (सिंचित)",
+  "Pearl Millet (Normal Varieties)": "बाजरा (सामान्य किस्म)",
+  "Pearl Millet (Hybrid)": "बाजरा (हाइब्रिड)",
+  "Sorghum (Normal Varieties)": "ज्वार (सामान्य किस्म)",
+  "Sorghum (Local Varieties)": "ज्वार (स्थानीय किस्म)",
+  "Finger Millet (Irrigated)": "रागी (सिंचित)",
+};
+
+const stateHindi = {
+  "Andhra Pradesh": "आंध्र प्रदेश",
+  "Assam": "असम",
+  "Bihar": "बिहार",
+  "Chhattisgarh": "छत्तीसगढ़",
+  "Gujarat": "गुजरात",
+  "Haryana": "हरियाणा",
+  "Himachal Pradesh": "हिमाचल प्रदेश",
+  "Jammu & Kashmir": "जम्मू और कश्मीर",
+  "Jharkhand": "झारखंड",
+  "Karnataka": "कर्नाटक",
+  "Kerala": "केरल",
+  "Madhya Pradesh": "मध्य प्रदेश",
+  "Maharashtra": "महाराष्ट्र",
+  "Odisha": "ओडिशा",
+  "Punjab": "पंजाब",
+  "Rajasthan": "राजस्थान",
+  "Tamil Nadu": "तमिलनाडु",
+  "Telangana": "तेलंगाना",
+  "Uttar Pradesh": "उत्तर प्रदेश",
+  "Uttarakhand": "उत्तराखंड",
+  "West Bengal": "पश्चिम बंगाल",
+};
+
+const fertHindi = {
+  "Urea": "यूरिया",
+  "DAP": "डीएपी",
+  "MOP": "एमओपी",
+  "SSP": "एसएसपी",
+};
+
+// =====================
+// INIT
+// =====================
+function init() {
+  const states = [...new Set(GFR.map(r => r[0]))].sort();
+  const sel = document.getElementById('stateSelect');
+  sel.innerHTML = `<option value="">${T[lang].phState}</option>`;
+  states.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = lang === 'hi' ? `${stateHindi[s] || s} (${s})` : s;
+    sel.appendChild(opt);
+  });
+  document.getElementById('cropSelect').innerHTML = `<option value="">${T[lang].phCrop}</option>`;
+  document.getElementById('cropSelect').disabled = true;
+}
+
+function populateCrops() {
+  const state = document.getElementById('stateSelect').value;
+  const sel = document.getElementById('cropSelect');
+  sel.innerHTML = `<option value="">${T[lang].phCrop}</option>`;
+  if (!state) { sel.disabled = true; return; }
+  const crops = GFR.filter(r => r[0] === state).map(r => r[1]);
+  crops.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = lang === 'hi' ? `${cropHindi[c] || c}` : c;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+}
+
+function selectScenario(s) {
+  scenario = s;
+  document.getElementById('sc1btn').classList.toggle('active', s === 1);
+  document.getElementById('sc2btn').classList.toggle('active', s === 2);
+}
+
+// =====================
+// CALCULATION
+// =====================
+function bagsToWords(bags, isHindi) {
+  if (bags === 0) return isHindi ? T.hi.noMop : T.en.noMop;
+  const whole = Math.floor(bags);
+  const frac = bags - whole;
+  
+  let fracStr = '';
+  if (frac >= 0.875) { fracStr = isHindi ? 'एक पूरा बैग अतिरिक्त' : ''; whole++; } // round up
+  else if (frac >= 0.625) fracStr = isHindi ? 'तीन चौथाई' : 'three quarter';
+  else if (frac >= 0.375) fracStr = isHindi ? 'आधा' : 'half';
+  else if (frac >= 0.125) fracStr = isHindi ? 'एक चौथाई' : 'one quarter';
+
+  if (isHindi) {
+    if (whole === 0) return fracStr ? fracStr + ' बैग' : '0 बैग';
+    if (!fracStr) return `${whole} ${whole === 1 ? 'बैग' : 'बैग'}`;
+    return `${whole} बैग और ${fracStr}`;
+  } else {
+    if (whole === 0) return fracStr ? fracStr + ' of a bag' : '0 bags';
+    const w = whole === 1 ? '1 bag' : `${whole} bags`;
+    if (!fracStr) return w;
+    return `${w} + ${fracStr}`;
+  }
+}
+
+function calculate() {
+  const t = T[lang];
+  const state = document.getElementById('stateSelect').value;
+  const crop = document.getElementById('cropSelect').value;
+  const landVal = parseFloat(document.getElementById('landInput').value);
+  const unit = document.getElementById('unitSelect').value;
+
+  if (!state) { alert(t.errState); shake('stateSelect'); return; }
+  if (!crop) { alert(t.errCrop); shake('cropSelect'); return; }
+  if (!landVal || landVal <= 0) { alert(t.errLand); shake('landInput'); return; }
+
+  // Convert land to hectares
+  const landHa = landVal * unitToHa[unit];
+
+  // Find GFR
+  const row = GFR.find(r => r[0] === state && r[1] === crop);
+  if (!row) return;
+  const [, , N, P, K] = row;
+
+  // Common fertilizer quantities per ha
+  const dap_ha = P / 0.46;          // DAP supplies 46% P and 18% N
+  const mop_ha = K / 0.60;          // MOP supplies 60% K
+  const ssp_ha = P / 0.16;          // SSP supplies 16% P, no N
+
+  // Total kg for the field (common)
+  const dap_kg = dap_ha * landHa;
+  const mop_kg = mop_ha * landHa;
+  const ssp_kg = ssp_ha * landHa;
+
+  // Scenario 1 (Urea + DAP + MOP):
+  //   DAP supplies 18% N → N_from_DAP = dap_kg * 0.18
+  //   Remaining N must come from Urea
+  const n_from_dap = dap_kg * 0.18;
+  const urea_kg_sc1 = Math.max(0, (N * landHa - n_from_dap)) / 0.46;
+
+  // Scenario 2 (Urea + SSP + MOP):
+  //   SSP supplies no N → all N from Urea
+  const urea_kg_sc2 = (N * landHa) / 0.46;
+
+  // Bags — Urea: 45 kg bag; DAP, MOP, SSP: 50 kg bag
+  const urea_bags_sc1 = urea_kg_sc1 / 45;
+  const urea_bags_sc2 = urea_kg_sc2 / 45;
+  const dap_bags = dap_kg / 50;
+  const mop_bags = mop_kg / 50;
+  const ssp_bags = ssp_kg / 50;
+
+  // Use scenario-specific urea values
+  const urea_kg = scenario === 1 ? urea_kg_sc1 : urea_kg_sc2;
+  const urea_bags = scenario === 1 ? urea_bags_sc1 : urea_bags_sc2;
+
+  const isHi = lang === 'hi';
+  const unitName = t.unitNames[unit];
+  const stateName = isHi ? (stateHindi[state] || state) : state;
+  const cropName = isHi ? (cropHindi[crop] || crop) : crop;
+
+  // Build results
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('res-title').textContent = t.resTitle;
+
+  const landHaStr = landHa.toFixed(3);
+  document.getElementById('res-meta').textContent =
+    `${stateName} · ${cropName} · ${landVal} ${unitName} (${landHaStr} ha)`;
+
+  // Summary chips
+  const chips = [
+    `<div class="summary-chip">${isHi ? 'नाइट्रोजन' : 'N'}: <strong>${(N*landHa).toFixed(1)} kg</strong></div>`,
+    `<div class="summary-chip">${isHi ? 'फॉस्फोरस' : 'P₂O₅'}: <strong>${(P*landHa).toFixed(1)} kg</strong></div>`,
+    `<div class="summary-chip">${isHi ? 'पोटाश' : 'K₂O'}: <strong>${(K*landHa).toFixed(1)} kg</strong></div>`,
+    `<div class="summary-chip">${isHi ? 'क्षेत्रफल' : 'Area'}: <strong>${landHaStr} ha</strong></div>`,
+  ];
+  document.getElementById('summaryItems').innerHTML = chips.join('');
+
+  // Update table headers
+  document.getElementById('th-fert').textContent = t.thFert;
+  document.getElementById('th-kg').textContent = t.thKg;
+  document.getElementById('th-bags').textContent = t.thBags;
+
+  // Table rows
+  let rows = '';
+  const fertData = scenario === 1
+    ? [
+        { name: isHi ? fertHindi['Urea'] : 'Urea', kg: urea_kg, bags: urea_bags },
+        { name: isHi ? fertHindi['DAP'] : 'DAP', kg: dap_kg, bags: dap_bags },
+        { name: isHi ? fertHindi['MOP'] : 'MOP', kg: mop_kg, bags: mop_bags },
+      ]
+    : [
+        { name: isHi ? fertHindi['Urea'] : 'Urea', kg: urea_kg, bags: urea_bags },
+        { name: isHi ? fertHindi['SSP'] : 'SSP', kg: ssp_kg, bags: ssp_bags },
+        { name: isHi ? fertHindi['MOP'] : 'MOP', kg: mop_kg, bags: mop_bags },
+      ];
+
+  fertData.forEach(f => {
+    const noFert = f.kg === 0;
+    const bWords = bagsToWords(f.bags, isHi);
+    rows += `<tr>
+      <td>${f.name}</td>
+      <td class="kg-val">${noFert ? (isHi ? 'आवश्यकता नहीं' : 'Not required') : f.kg.toFixed(1) + ' kg'}</td>
+      <td>
+        ${noFert ? `<span style="color:#888">${bWords}</span>` :
+          `<div class="bags-num">${f.bags.toFixed(2)}</div>
+           <div class="bags-word">${bWords}</div>`}
+      </td>
+    </tr>`;
+  });
+  document.getElementById('resultBody').innerHTML = rows;
+
+  // Note
+  document.getElementById('noteBox').innerHTML = `<strong>${t.noteLabel}</strong> ${t.calcNote}`;
+
+  // GFR Info
+  const scenName = scenario === 1
+    ? (isHi ? 'परिदृश्य 1: यूरिया + डीएपी + एमओपी' : 'Scenario 1: Urea + DAP + MOP')
+    : (isHi ? 'परिदृश्य 2: यूरिया + एसएसपी + एमओपी' : 'Scenario 2: Urea + SSP + MOP');
+  document.getElementById('gfrInfo').innerHTML = `
+    <div class="gfr-row"><span>${isHi ? 'अनुशंसित N (किग्रा/हे)' : 'GFR N (kg/ha)'}</span><strong>${N}</strong></div>
+    <div class="gfr-row"><span>${isHi ? 'अनुशंसित P₂O₅ (किग्रा/हे)' : 'GFR P₂O₅ (kg/ha)'}</span><strong>${P}</strong></div>
+    <div class="gfr-row"><span>${isHi ? 'अनुशंसित K₂O (किग्रा/हे)' : 'GFR K₂O (kg/ha)'}</span><strong>${K}</strong></div>
+    <div class="gfr-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><span>${isHi ? 'परिदृश्य' : 'Scenario'}</span><strong>${scenName}</strong></div>
+  `;
+
+  // Scroll to results
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+}
+
+// =====================
+// LANGUAGE TOGGLE
+// =====================
+function toggleLang() {
+  lang = lang === 'en' ? 'hi' : 'en';
+  applyLang();
+}
+
+function applyLang() {
+  const t = T[lang];
+  document.getElementById('h-title').textContent = t.hTitle;
+  document.getElementById('h-sub').textContent = t.hSub;
+  document.getElementById('langBtn').textContent = t.langBtn;
+  document.getElementById('f-title').textContent = t.fTitle;
+  document.getElementById('f-sub').textContent = t.fSub;
+  document.getElementById('l-state').textContent = t.lState;
+  document.getElementById('l-crop').textContent = t.lCrop;
+  document.getElementById('l-land').textContent = t.lLand;
+  document.getElementById('l-scenario').textContent = t.lScenario;
+  document.getElementById('sc1-sub').textContent = t.sc1Sub;
+  document.getElementById('sc2-sub').textContent = t.sc2Sub;
+  document.getElementById('btn-text').textContent = t.btnText;
+  document.getElementById('footer-text').textContent = t.footer;
+
+  // Update unit options
+  const unitSel = document.getElementById('unitSelect');
+  const curUnit = unitSel.value;
+  unitSel.innerHTML = Object.entries(t.unitNames).map(([v, n]) =>
+    `<option value="${v}"${v === curUnit ? ' selected' : ''}>${n}</option>`
+  ).join('');
+
+  const savedState = document.getElementById('stateSelect').value;
+  const savedCrop = document.getElementById('cropSelect').value;
+  init();
+  if (savedState) {
+    document.getElementById('stateSelect').value = savedState;
+    populateCrops();
+    if (savedCrop) document.getElementById('cropSelect').value = savedCrop;
+  }
+
+  // Hide results on language change (they'll be recalculated)
+  document.getElementById('results').style.display = 'none';
+}
+
+// =====================
+// PWA SERVICE WORKER
+// =====================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Init on load
+init();
+</script>
+</body>
+</html>

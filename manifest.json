@@ -1,0 +1,24 @@
+{
+  "name": "Fertilizer Calculator | उर्वरक कैलकुलेटर",
+  "short_name": "FertCalc",
+  "description": "State-wise Fertilizer Recommendation Calculator for Indian Farmers",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#FAFAF7",
+  "theme_color": "#2D6A4F",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["agriculture", "utilities"],
+  "lang": "en-IN"
+}

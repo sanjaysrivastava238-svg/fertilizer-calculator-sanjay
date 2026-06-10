@@ -408,6 +408,7 @@ const T = {
 
 let lang = 'en';
 let scenario = 1;
+let switching = false;
 
 // Unit conversions to hectare
 const unitToHa = {
@@ -688,7 +689,11 @@ function bagsToWords(bags, isHindi) {
 
 // Auto-recalculate when inputs change (only if results already shown)
 function autoRecalc() {
-  if (document.getElementById('results').style.display !== 'none') {
+  if (switching) return;
+  const state  = document.getElementById('stateSelect').value;
+  const crop   = document.getElementById('cropSelect').value;
+  const land   = parseFloat(document.getElementById('landInput').value);
+  if (state && crop && land > 0) {
     calculate();
   }
 }
@@ -829,7 +834,9 @@ function shake(id) {
 // =====================
 function toggleLang() {
   lang = lang === 'en' ? 'hi' : 'en';
+  switching = true;
   applyLang();
+  switching = false;
 }
 
 function applyLang() {
@@ -857,6 +864,7 @@ function applyLang() {
 
   const savedState = document.getElementById('stateSelect').value;
   const savedCrop = document.getElementById('cropSelect').value;
+  const savedLand = document.getElementById('landInput').value;
   init();
   if (savedState) {
     document.getElementById('stateSelect').value = savedState;
@@ -864,8 +872,13 @@ function applyLang() {
     if (savedCrop) document.getElementById('cropSelect').value = savedCrop;
   }
 
-  // Hide results on language change (they'll be recalculated)
-  document.getElementById('results').style.display = 'none';
+  // Recalculate after DOM has fully updated
+  const hasLand = parseFloat(savedLand) > 0;
+  if (savedState && savedCrop && hasLand) {
+    setTimeout(() => calculate(), 50);
+  } else {
+    document.getElementById('results').style.display = 'none';
+  }
 }
 
 // =====================
